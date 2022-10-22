@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: doku-pod
+  labels:
+    app: doku
+spec:
+  containers:
+  - name: dokuwiki
+    image: lscr.io/linuxserver/dokuwiki
+    env:
+    - name: PUID
+      value: "1000"
+    - name: -PGID
+      value: "1000"
+    - name: -TZ
+      value: EUROPE/Minsk
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - name: web
+        containerPort: 80
+        protocol: TCP
+    volumeMounts:
+    - mountPath: /config
+      name: doky-pvc
+  volumes:
+  - name: doky-pvc
+    persistentVolumeClaim:
+      claimName: doku-pvc
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-nfs-sc-doku
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs.csi.k8s.io
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: doku-nfs-pv
+spec:
+  capacity:
+    storage: 500Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: csi-nfs-sc-doku
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: doku-data-id
+    volumeAttributes:
+      server: 174.138.10.149
+      share: /ssd/dynamic
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: doku-pvc
+spec:
+  storageClassName: csi-nfs-sc-doku
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doku-service
+  annotations:
+spec:
+  type: ClusterIP
+  selector:
+    app: doku
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
