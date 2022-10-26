@@ -1,4 +1,4 @@
-# dokuchart
+# Dokuchart
 
 
 Check if the CSI-NFS driver is installed
