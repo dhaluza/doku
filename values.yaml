@@ -1,0 +1,4 @@
+
+container:
+  image: lscr.io/linuxserver/dokuwiki
+

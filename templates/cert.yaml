@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bioxvirizm
+  namespace: default
+spec:
+  secretName: bioxvirizm-tls
+  issuerRef:
+    name: letsencrypt
+  commonName: devdoku.bioxvirizm.online
+  dnsNames:
+  - devdoku.bioxvirizm.online
